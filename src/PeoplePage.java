@@ -36,7 +36,7 @@ public class PeoplePage extends JPanel {
         nameField = new JTextField(20);
         this.add(nameField, gbc);
 
-        //Last Name Label
+        //Last Name
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.weightx = 0;
@@ -48,7 +48,7 @@ public class PeoplePage extends JPanel {
         lastNameField = new JTextField(20);
         this.add(lastNameField, gbc);
 
-        //Position Label
+        //Position
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.weightx = 0;
@@ -80,7 +80,7 @@ public class PeoplePage extends JPanel {
         this.add(buttonPanel, gbc);
 
         //Saved Entries
-        JScrollPane scrollPane = new JScrollPane(parent.getSavedTextArea());
+        JScrollPane scrollPane = new JScrollPane(parent.getSavedNamesTextArea());
 
         gbc.gridx = 0;
         gbc.gridy = 4;
@@ -103,20 +103,23 @@ public class PeoplePage extends JPanel {
             String position = (String) positionComboBox.getSelectedItem();
 
             if (name.isEmpty() || lastName.isEmpty()) {
-                JOptionPane.showMessageDialog(parent.getSavedTextArea(), "Name and Last Name cannot be empty!",
+                JOptionPane.showMessageDialog(parent.getSavedNamesTextArea(), "Name and Last Name cannot be empty!",
                         "Input Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             String entry = String.format("%s, %s, %s", name, lastName, position);
-            parent.getSavedTextArea().append(entry + "\n");
+            parent.getSavedNamesTextArea().append(entry + "\n");
 
             try {
-                parent.saveToFile(entry);
-                JOptionPane.showMessageDialog(parent.getSavedTextArea(), "Entry saved successfully!",
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
+                parent.saveNamesToFile(entry);
+
+              // Saved information prompt, debug
+              //  JOptionPane.showMessageDialog(parent.getSavedNamesTextArea(), "Entry saved successfully!",
+              //          "Success", JOptionPane.INFORMATION_MESSAGE);
+
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(parent.getSavedTextArea(), "Error saving to file: " + ex.getMessage(),
+                JOptionPane.showMessageDialog(parent.getSavedNamesTextArea(), "Error saving to file: " + ex.getMessage(),
                         "File Save Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
@@ -147,9 +150,9 @@ public class PeoplePage extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
 
             if (response == JOptionPane.YES_OPTION) {
-                if (parent.deleteAllFromFile()) {
+                if (parent.deleteAllNamesFromFile()) {
                     JOptionPane.showMessageDialog(frame, "All data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    parent.getSavedTextArea().setText(""); // Clear the UI display
+                    parent.getSavedNamesTextArea().setText(""); // Clear the UI display
                 } else {
                     JOptionPane.showMessageDialog(frame, "Failed to delete all data.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -176,10 +179,10 @@ public class PeoplePage extends JPanel {
 
             if (response == JOptionPane.YES_OPTION) {
                 try {
-                    parent.deleteFromFile(nameToDelete);
+                    parent.deleteNamesFromFile(nameToDelete);
                     JOptionPane.showMessageDialog(frame, "Entry for '" + nameToDelete + "' deleted successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
-                    parent.loadSavedEntries();
+                    parent.loadSavedNames();
                     nameField.setText("");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error deleting from file: " + ex.getMessage(),
