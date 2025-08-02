@@ -13,6 +13,7 @@ public class PeoplePage extends JPanel {
     private JButton saveButton;
     private JButton clearButton;
     private JButton deleteButton;
+    private JButton deleteAllButton;
 
     public PeoplePage(Layout parent) {
         this.parent = parent;
@@ -66,9 +67,11 @@ public class PeoplePage extends JPanel {
         saveButton = new JButton("Save");
         clearButton = new JButton("Clear Fields");
         deleteButton = new JButton("Delete by Name");
+        deleteAllButton = new JButton("Delete All");
         buttonPanel.add(saveButton);
         buttonPanel.add(clearButton);
         buttonPanel.add(deleteButton);
+        buttonPanel.add(deleteAllButton);
 
         gbc.gridx = 0;
         gbc.gridy = 3;
@@ -89,6 +92,7 @@ public class PeoplePage extends JPanel {
         saveButton.addActionListener(new SaveButtonListener());
         clearButton.addActionListener(new ClearButtonListener());
         deleteButton.addActionListener(new DeleteButtonListener());
+        deleteAllButton.addActionListener(new DeleteAllButtonListener());
     }
 
     private class SaveButtonListener implements ActionListener {
@@ -129,6 +133,27 @@ public class PeoplePage extends JPanel {
             nameField.setText("");
             lastNameField.setText("");
             positionComboBox.setSelectedIndex(0);
+        }
+    }
+
+    private class DeleteAllButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(PeoplePage.this);
+            int response = JOptionPane.showConfirmDialog(frame,
+                    "Are you sure you want to delete ALL saved data?",
+                    "Confirm Delete All",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+
+            if (response == JOptionPane.YES_OPTION) {
+                if (parent.deleteAllFromFile()) {
+                    JOptionPane.showMessageDialog(frame, "All data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    parent.getSavedTextArea().setText(""); // Clear the UI display
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Failed to delete all data.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
     }
 

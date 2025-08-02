@@ -1,10 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,6 +99,11 @@ public class Layout {
         } catch (IOException ex) {
             System.err.println("Could not read from file, assuming it's a new session.");
         }
+    }
+
+    public boolean deleteAllFromFile() {
+        File file = new File(FILE_NAME);
+        return file.delete();
     }
 
     public JTextArea getSavedTextArea() {
