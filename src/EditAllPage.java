@@ -12,6 +12,7 @@ public class EditAllPage extends JPanel {
     private JTextArea notInAttendanceTextArea;
     private JTextArea financialsTextArea;
     private JTextArea meetingNotesTextArea;
+    private JTextArea thanksTextArea;
 
     public EditAllPage(Layout parent) {
         this.parent = parent;
@@ -77,6 +78,16 @@ public class EditAllPage extends JPanel {
         meetingNotesTextArea = new JTextArea(10, 20);
         meetingNotesTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(meetingNotesTextArea), gbc);
+
+        // Thanks everyone for being here
+        gbc.gridy = 12;
+        gbc.weighty = 0.1;
+        this.add(new JLabel("Closing Remarks:"), gbc);
+        gbc.gridy = 13;
+        gbc.weighty = 0.1;
+        thanksTextArea = new JTextArea(3, 20);
+        thanksTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        this.add(new JScrollPane(thanksTextArea), gbc);
     }
 
     public void refreshData() {
@@ -115,6 +126,14 @@ public class EditAllPage extends JPanel {
 
             inAttendanceTextArea.setText(presentBuilder.toString());
             notInAttendanceTextArea.setText(absentBuilder.toString());
+
+            if (!presentNames.isEmpty()) {
+                String mostImportantPerson = presentNames.get(0);
+                String closingRemarks = "lastly the " + mostImportantPerson + " thanks everyone for being here";
+                thanksTextArea.setText(closingRemarks);
+            } else {
+                thanksTextArea.setText("lastly the [most important person] thanks everyone for being here");
+            }
         }
     }
 }
