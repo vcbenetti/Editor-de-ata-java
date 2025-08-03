@@ -1,11 +1,23 @@
+package org.example;
+
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.property.TextAlignment;
+
 import javax.swing.*;
 import java.awt.*;
-import java.math.BigDecimal;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+
 
 public class EditAllPage extends JPanel {
     private Layout parent;
@@ -17,6 +29,8 @@ public class EditAllPage extends JPanel {
     private JTextArea financialsTextArea;
     private JTextArea meetingNotesTextArea;
     private JTextArea thanksTextArea;
+
+    private JButton exportPdfButton;
 
     public EditAllPage(Layout parent) {
         this.parent = parent;
@@ -92,6 +106,23 @@ public class EditAllPage extends JPanel {
         thanksTextArea = new JTextArea(3, 20);
         thanksTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(thanksTextArea), gbc);
+
+        //Export to PDF button
+        gbc.gridx = 0;
+        gbc.gridy = 14;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        exportPdfButton = new JButton("Export to PDF");
+        this.add(exportPdfButton, gbc);
+
+        exportPdfButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                exportToPdf();
+            }
+        });
+
     }
 
     public void refreshData() {
@@ -102,31 +133,31 @@ public class EditAllPage extends JPanel {
                 "Address: " + parent.getAddressFieldText();
         organizationTimeAddressTextArea.setText(orgTimeAddress);
 
-            String expensesText = parent.getExpensesFieldText();
-            String revenueText = parent.getRevenueFieldText();
-            String balanceText = parent.getBalanceFieldText();
+        String expensesText = parent.getExpensesFieldText();
+        String revenueText = parent.getRevenueFieldText();
+        String balanceText = parent.getBalanceFieldText();
 
-            String cleanedExpensesText = expensesText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
-            String cleanedRevenueText = revenueText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
-            String cleanedBalanceText = balanceText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
-
-
-            double expenses = cleanedExpensesText.isEmpty() ? 0.0 : Double.parseDouble(cleanedExpensesText);
-            double revenue = cleanedRevenueText.isEmpty() ? 0.0 : Double.parseDouble(cleanedRevenueText);
-            double balance = cleanedBalanceText.isEmpty() ? 0.0 : Double.parseDouble(cleanedBalanceText);
+        String cleanedExpensesText = expensesText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
+        String cleanedRevenueText = revenueText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
+        String cleanedBalanceText = balanceText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
 
 
-            String expensesInWords = NumberToWordsConverter.convertDecimal(expenses);
-            String revenueInWords = NumberToWordsConverter.convertDecimal(revenue);
-            String balanceInWords = NumberToWordsConverter.convertDecimal(balance);
+        double expenses = cleanedExpensesText.isEmpty() ? 0.0 : Double.parseDouble(cleanedExpensesText);
+        double revenue = cleanedRevenueText.isEmpty() ? 0.0 : Double.parseDouble(cleanedRevenueText);
+        double balance = cleanedBalanceText.isEmpty() ? 0.0 : Double.parseDouble(cleanedBalanceText);
 
 
-            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+        String expensesInWords = NumberToWordsConverter.convertDecimal(expenses);
+        String revenueInWords = NumberToWordsConverter.convertDecimal(revenue);
+        String balanceInWords = NumberToWordsConverter.convertDecimal(balance);
 
-            String financialsText = "Expenses: " + currencyFormat.format(expenses) + " (" + expensesInWords + ")\n" +
-                    "Revenue: " + currencyFormat.format(revenue) + " (" + revenueInWords + ")\n" +
-                    "Balance: " + currencyFormat.format(balance) + " (" + balanceInWords + ")";
-            financialsTextArea.setText(financialsText);
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+        String financialsText = "Expenses: " + currencyFormat.format(expenses) + " (" + expensesInWords + ")\n" +
+                "Revenue: " + currencyFormat.format(revenue) + " (" + revenueInWords + ")\n" +
+                "Balance: " + currencyFormat.format(balance) + " (" + balanceInWords + ")";
+        financialsTextArea.setText(financialsText);
 
         List<JCheckBox> attendanceCheckboxes = parent.getAttendanceCheckboxes();
         if (attendanceCheckboxes != null) {
@@ -183,5 +214,65 @@ public class EditAllPage extends JPanel {
         }
     }
 
+    private void exportToPdf() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save PDF File");
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+
+            if (!filePath.toLowerCase().endsWith(".pdf")) {
+                filePath += ".pdf";
+            }
+
+            try {
+                PdfWriter writer = new PdfWriter(filePath);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document document = new Document(pdf);
+
+                // Title
+                document.add(new Paragraph(titleTextArea.getText())
+                        .setBold()
+                        .setFontSize(18)
+                        .setTextAlignment(TextAlignment.CENTER)
+                        .setUnderline());
+
+                //Oganization, Time, Address
+                document.add(new Paragraph(new Text("Organization, Time, Address:").setBold().setFontSize(14)));
+                document.add(new Paragraph(organizationTimeAddressTextArea.getText()).setFontSize(12));
+
+                //In Attendance
+                document.add(new Paragraph(new Text("In Attendance:").setBold().setFontSize(14)));
+                document.add(new Paragraph(inAttendanceTextArea.getText()).setFontSize(12));
+
+                //Not In Attendance
+                document.add(new Paragraph(new Text("Not In Attendance:").setBold().setFontSize(14)));
+                document.add(new Paragraph(notInAttendanceTextArea.getText()).setFontSize(12));
+
+                //Financials
+                document.add(new Paragraph(new Text("Financials:").setBold().setFontSize(14)));
+                document.add(new Paragraph(financialsTextArea.getText()).setFontSize(12));
+
+                //Meeting Notes
+                document.add(new Paragraph(new Text("Meeting Notes:").setBold().setFontSize(14)));
+                document.add(new Paragraph(meetingNotesTextArea.getText()).setFontSize(12));
+
+                //Closing Remarks
+                document.add(new Paragraph(new Text("Closing Remarks:").setBold().setFontSize(14)));
+                document.add(new Paragraph(thanksTextArea.getText()).setFontSize(12));
+
+                document.close();
+                JOptionPane.showMessageDialog(this, "PDF exported successfully to " + filePath,
+                        "Export Success", JOptionPane.INFORMATION_MESSAGE);
+
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error exporting PDF: " + ex.getMessage(),
+                        "Export Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        }
+    }
 
 }

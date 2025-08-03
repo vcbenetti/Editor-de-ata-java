@@ -1,7 +1,2 @@
-a b, Second Secretary
-c d, First Secretary
-f g, Third Treasurer
-g h, President
-i j, Treasurer
-ds ds, Second Treasurer
-gjj kk, Vice President
+aaa bbb, President
+dwadaw dwadwadwa, Treasurer
