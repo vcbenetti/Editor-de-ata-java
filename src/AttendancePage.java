@@ -1,11 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 
 public class AttendancePage extends JPanel {
 
@@ -38,7 +36,6 @@ public class AttendancePage extends JPanel {
     }
 
     public void refreshAttendanceList() {
-
         attendanceListPanel.removeAll();
         attendanceCheckboxes.clear();
 
@@ -62,6 +59,7 @@ public class AttendancePage extends JPanel {
                 if (importance1 != importance2) {
                     return Integer.compare(importance1, importance2);
                 }
+
                 return name1.compareTo(name2);
             }
 
@@ -89,10 +87,10 @@ public class AttendancePage extends JPanel {
                         case "third secretary":
                             return 9;
                         default:
-                            return 10;
+                            return 10; // Member or any other position
                     }
                 }
-                return 10;
+                return 10; // Default for no position found
             }
         });
 
@@ -115,5 +113,9 @@ public class AttendancePage extends JPanel {
         }
 
         JOptionPane.showMessageDialog(this, attendanceSummary.toString(), "Attendance Saved", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public List<JCheckBox> getAttendanceCheckboxes() {
+        return attendanceCheckboxes;
     }
 }

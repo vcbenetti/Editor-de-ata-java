@@ -17,7 +17,10 @@ public class Layout {
 
     private JTextArea savedNamesTextArea;
     private JTextArea savedDetailsTextArea;
+    private PeoplePage peoplePage;
+    private DetailsPage detailsPage;
     private AttendancePage attendancePage;
+    private EditAllPage editAllPage;
 
     public Layout() {
 
@@ -37,14 +40,14 @@ public class Layout {
         this.savedDetailsTextArea.setEditable(false);
         this.savedDetailsTextArea.setLineWrap(true);
 
-        PeoplePage peoplePage = new PeoplePage(this);
-        DetailsPage detailsPage = new DetailsPage(this);
-        this.attendancePage = new AttendancePage(this);
-        EditAllPage editAllPage = new EditAllPage();
+        peoplePage = new PeoplePage(this);
+        detailsPage = new DetailsPage(this);
+        attendancePage = new AttendancePage(this);
+        editAllPage = new EditAllPage(this);
 
         mainPanel.add(peoplePage, "people");
         mainPanel.add(detailsPage, "details");
-        mainPanel.add(this.attendancePage, "attendance");
+        mainPanel.add(attendancePage, "attendance");
         mainPanel.add(editAllPage, "editAll");
 
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
@@ -62,9 +65,14 @@ public class Layout {
         detailsButton.addActionListener(e -> cardLayout.show(mainPanel, "details"));
         attendanceButton.addActionListener(e -> {
             cardLayout.show(mainPanel, "attendance");
-            this.attendancePage.refreshAttendanceList();
+            attendancePage.refreshAttendanceList();
         });
-        editAllButton.addActionListener(e -> cardLayout.show(mainPanel, "editAll"));
+        editAllButton.addActionListener(e -> {
+            detailsPage.loadDetails();
+            attendancePage.refreshAttendanceList();
+            editAllPage.refreshData();
+            cardLayout.show(mainPanel, "editAll");
+        });
 
         frame.add(mainPanel, BorderLayout.CENTER);
         frame.add(navPanel, BorderLayout.SOUTH);
@@ -105,8 +113,7 @@ public class Layout {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(frame, "No entry found for '" + nameToDelete + "'.",
-                    "Entry Not Found", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "No entry found for '" + nameToDelete + "'.", "Entry Not Found", JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -170,7 +177,7 @@ public class Layout {
                             return 10; // Member or any other position
                     }
                 }
-                return 10;
+                return 10; // Default for no position found
             }
         });
 
@@ -212,4 +219,12 @@ public class Layout {
         return savedDetailsTextArea;
     }
 
+    public String getTitleFieldText() { return detailsPage.getTitleField().getText(); }
+    public String getOrganizationFieldText() { return detailsPage.getOrganizationField().getText(); }
+    public String getTimeFieldText() { return detailsPage.getTimeField().getText(); }
+    public String getAddressFieldText() { return detailsPage.getAddressField().getText(); }
+    public String getExpensesFieldText() { return detailsPage.getExpensesField().getText(); }
+    public String getRevenueFieldText() { return detailsPage.getRevenueField().getText(); }
+    public String getBalanceFieldText() { return detailsPage.getBalanceField().getText(); }
+    public List<JCheckBox> getAttendanceCheckboxes() { return attendancePage.getAttendanceCheckboxes(); }
 }
