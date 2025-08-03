@@ -57,17 +57,18 @@ public class PeoplePage extends JPanel {
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.weightx = 1.0;
-        String[] positions = {"President", "Vice President", "Secretary"};
-        positionComboBox = new JComboBox<>(positions);
-        positionComboBox.setSelectedIndex(0);
+        positionComboBox = new JComboBox<>(new String[]{"President", "Vice President", "Second Vice President",
+                "Treasurer", "Second Treasurer", "Third Treasurer", "First Secretary", "Second Secretary",
+                "Third Secretary", "Member"});
         this.add(positionComboBox, gbc);
 
-        //Buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         saveButton = new JButton("Save");
-        clearButton = new JButton("Clear Fields");
-        deleteButton = new JButton("Delete by Name");
+        clearButton = new JButton("Clear");
+        deleteButton = new JButton("Delete");
         deleteAllButton = new JButton("Delete All");
+
         buttonPanel.add(saveButton);
         buttonPanel.add(clearButton);
         buttonPanel.add(deleteButton);
@@ -79,12 +80,12 @@ public class PeoplePage extends JPanel {
         gbc.fill = GridBagConstraints.NONE;
         this.add(buttonPanel, gbc);
 
-        //Saved Entries
+        // Saved names display
         JScrollPane scrollPane = new JScrollPane(parent.getSavedNamesTextArea());
-
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.BOTH;
         this.add(scrollPane, gbc);
@@ -103,30 +104,26 @@ public class PeoplePage extends JPanel {
             String position = (String) positionComboBox.getSelectedItem();
 
             if (name.isEmpty() || lastName.isEmpty()) {
-                JOptionPane.showMessageDialog(parent.getSavedNamesTextArea(), "Name and Last Name cannot be empty!",
+                JOptionPane.showMessageDialog(PeoplePage.this, "Name and Last Name cannot be empty.",
                         "Input Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            String entry = String.format("%s, %s, %s", name, lastName, position);
-            parent.getSavedNamesTextArea().append(entry + "\n");
+            String entry = name + " " + lastName + ", " + position;
 
             try {
                 parent.saveNamesToFile(entry);
-
-              // Saved information prompt, debug
-              //  JOptionPane.showMessageDialog(parent.getSavedNamesTextArea(), "Entry saved successfully!",
-              //          "Success", JOptionPane.INFORMATION_MESSAGE);
-
+                parent.loadSavedNames();
+                nameField.setText("");
+                lastNameField.setText("");
+                positionComboBox.setSelectedIndex(0);
+                JOptionPane.showMessageDialog(PeoplePage.this, "Entry saved successfully!",
+                        "Success", JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(parent.getSavedNamesTextArea(), "Error saving to file: " + ex.getMessage(),
+                JOptionPane.showMessageDialog(PeoplePage.this, "Error saving to file: " + ex.getMessage(),
                         "File Save Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
-
-            nameField.setText("");
-            lastNameField.setText("");
-            positionComboBox.setSelectedIndex(0);
         }
     }
 
@@ -144,15 +141,15 @@ public class PeoplePage extends JPanel {
         public void actionPerformed(ActionEvent e) {
             JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(PeoplePage.this);
             int response = JOptionPane.showConfirmDialog(frame,
-                    "Are you sure you want to delete ALL saved data?",
+                    "Are you sure you want to delete ALL people data? This action cannot be undone.",
                     "Confirm Delete All",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE);
 
             if (response == JOptionPane.YES_OPTION) {
                 if (parent.deleteAllNamesFromFile()) {
-                    JOptionPane.showMessageDialog(frame, "All data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    parent.getSavedNamesTextArea().setText(""); // Clear the UI display
+                    JOptionPane.showMessageDialog(frame, "All people data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    parent.getSavedNamesTextArea().setText("");
                 } else {
                     JOptionPane.showMessageDialog(frame, "Failed to delete all data.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -163,7 +160,7 @@ public class PeoplePage extends JPanel {
     private class DeleteButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            String nameToDelete = nameField.getText().trim();
+            String nameToDelete = nameField.getText().trim() + " " + lastNameField.getText().trim();
             JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(PeoplePage.this);
 
             if (nameToDelete.isEmpty()) {

@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class Layout {
@@ -15,6 +17,7 @@ public class Layout {
 
     private JTextArea savedNamesTextArea;
     private JTextArea savedDetailsTextArea;
+    private AttendancePage attendancePage;
 
     public Layout() {
 
@@ -34,10 +37,15 @@ public class Layout {
         this.savedDetailsTextArea.setEditable(false);
         this.savedDetailsTextArea.setLineWrap(true);
 
-        mainPanel.add(new PeoplePage(this), "people");
-        mainPanel.add(new DetailsPage(this), "details");
-        mainPanel.add(new AttendancePage(), "attendance");
-        mainPanel.add(new EditAllPage(), "editAll");
+        PeoplePage peoplePage = new PeoplePage(this);
+        DetailsPage detailsPage = new DetailsPage(this);
+        this.attendancePage = new AttendancePage(this);
+        EditAllPage editAllPage = new EditAllPage();
+
+        mainPanel.add(peoplePage, "people");
+        mainPanel.add(detailsPage, "details");
+        mainPanel.add(this.attendancePage, "attendance");
+        mainPanel.add(editAllPage, "editAll");
 
         JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
         JButton peopleButton = new JButton("People");
@@ -52,7 +60,10 @@ public class Layout {
 
         peopleButton.addActionListener(e -> cardLayout.show(mainPanel, "people"));
         detailsButton.addActionListener(e -> cardLayout.show(mainPanel, "details"));
-        attendanceButton.addActionListener(e -> cardLayout.show(mainPanel, "attendance"));
+        attendanceButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "attendance");
+            this.attendancePage.refreshAttendanceList();
+        });
         editAllButton.addActionListener(e -> cardLayout.show(mainPanel, "editAll"));
 
         frame.add(mainPanel, BorderLayout.CENTER);
@@ -70,11 +81,6 @@ public class Layout {
         }
     }
 
-    /**
-     * Deletes all entries with a matching name from the names save file.
-     * @param nameToDelete The name to search for and delete.
-     * @throws IOException if an I/O error occurs.
-     */
     public void deleteNamesFromFile(String nameToDelete) throws IOException {
         List<String> remainingEntries = new ArrayList<>();
         boolean found = false;
@@ -88,8 +94,9 @@ public class Layout {
                     remainingEntries.add(line);
                 }
             }
+        } catch (FileNotFoundException e) {
+            return;
         }
-
         if (found) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(NAMES_FILE, false))) {
                 for (String entry : remainingEntries) {
@@ -98,46 +105,85 @@ public class Layout {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(frame, "No entry found for '" + nameToDelete + "'.", "Entry Not Found", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "No entry found for '" + nameToDelete + "'.",
+                    "Entry Not Found", JOptionPane.WARNING_MESSAGE);
         }
     }
 
-    /**
-     * Deletes the entire names data file.
-     * @return true if the file was deleted successfully, false otherwise.
-     */
     public boolean deleteAllNamesFromFile() {
         File file = new File(NAMES_FILE);
         return file.delete();
     }
 
-    /**
-     * Loads all entries from the names save file and displays them in the JTextArea.
-     */
     public void loadSavedNames() {
-        savedNamesTextArea.setText(""); // Clear the text area before reloading
+        List<String> names = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(NAMES_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                savedNamesTextArea.append(line + "\n");
+                String trimmedName = line.trim();
+                if (!trimmedName.isEmpty()) {
+                    names.add(trimmedName);
+                }
             }
         } catch (IOException ex) {
             System.err.println("Could not read from names file, assuming it's a new session.");
         }
+
+        Collections.sort(names, new Comparator<String>() {
+            @Override
+            public int compare(String name1, String name2) {
+
+                int importance1 = getImportance(name1);
+                int importance2 = getImportance(name2);
+
+                if (importance1 != importance2) {
+                    return Integer.compare(importance1, importance2);
+                }
+
+                return name1.compareTo(name2);
+            }
+
+            private int getImportance(String nameWithPosition) {
+                String[] parts = nameWithPosition.split(",", 2);
+                if (parts.length > 1) {
+                    String position = parts[1].trim().toLowerCase();
+                    switch (position) {
+                        case "president":
+                            return 1;
+                        case "vice president":
+                            return 2;
+                        case "second vice president":
+                            return 3;
+                        case "treasurer":
+                            return 4;
+                        case "second treasurer":
+                            return 5;
+                        case "third treasurer":
+                            return 6;
+                        case "first secretary":
+                            return 7;
+                        case "second secretary":
+                            return 8;
+                        case "third secretary":
+                            return 9;
+                        default:
+                            return 10; // Member or any other position
+                    }
+                }
+                return 10;
+            }
+        });
+
+        savedNamesTextArea.setText("");
+        for (String name : names) {
+            savedNamesTextArea.append(name + "\n");
+        }
     }
 
-    // Getter for the JTextArea on the PeoplePage
     public JTextArea getSavedNamesTextArea() {
         return savedNamesTextArea;
     }
 
-    // --- Methods for DetailsPage functionality ---
-
-    /**
-     * Appends a new entry to the details save file.
-     * @param entry The string to be saved.
-     * @throws IOException if an I/O error occurs.
-     */
     public void saveDetailsToFile(String entry) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(DETAILS_FILE, false))) {
             writer.write(entry);
@@ -145,18 +191,11 @@ public class Layout {
         }
     }
 
-    /**
-     * Deletes the entire details data file.
-     * @return true if the file was deleted successfully, false otherwise.
-     */
     public boolean deleteAllDetailsFromFile() {
         File file = new File(DETAILS_FILE);
         return file.delete();
     }
 
-    /**
-     * Loads all entries from the details save file and displays them in the JTextArea.
-     */
     public void loadSavedDetails() {
         savedDetailsTextArea.setText(""); // Clear the text area before reloading
         try (BufferedReader reader = new BufferedReader(new FileReader(DETAILS_FILE))) {
@@ -169,7 +208,6 @@ public class Layout {
         }
     }
 
-    // Getter for the JTextArea on the DetailsPage
     public JTextArea getSavedDetailsTextArea() {
         return savedDetailsTextArea;
     }
