@@ -80,8 +80,10 @@ public class EditAllPage extends JPanel {
         this.add(new JScrollPane(meetingNotesTextArea), gbc);
     }
 
-    public void refreshData() {
+        public void refreshData() {
+        // Populate the text areas from the parent's current data
         titleTextArea.setText(parent.getTitleFieldText());
+
         String orgTimeAddress = "Organization: " + parent.getOrganizationFieldText() + "\n" +
                 "Time: " + parent.getTimeFieldText() + "\n" +
                 "Address: " + parent.getAddressFieldText();
