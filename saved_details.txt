@@ -1,7 +1,7 @@
-Title: a
-Org: a
-Time: 00:00
-Address: a
-Exp: 123,00 (cento e vinte e três reais)
-Rev: 3,00 (três reais)
-Bal: 312,00 (trezentos e doze reais)
+Title: TITULO
+Organization: ORGANIZACAO
+Time: 11:11
+Address: AV PAULISTA
+Expenses: 3213,00 (três mil, duzentos e treze reais)
+Revenue: 214,00 (duzentos e quatorze reais)
+Balance: 2412,00 (dois mil, quatrocentos e doze reais)

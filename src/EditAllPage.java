@@ -35,53 +35,51 @@ public class EditAllPage extends JPanel {
 
         //Organization, Time, Address
         gbc.gridy = 2;
-        gbc.weighty = 0.2;
         this.add(new JLabel("Organization, Time, Address:"), gbc);
         gbc.gridy = 3;
-        organizationTimeAddressTextArea = new JTextArea(4, 20);
+        organizationTimeAddressTextArea = new JTextArea(3, 20);
         organizationTimeAddressTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(organizationTimeAddressTextArea), gbc);
 
-        //In Attendance
+        //Attendance
         gbc.gridy = 4;
-        gbc.weighty = 0.15;
+        gbc.weighty = 0.1;
         this.add(new JLabel("In Attendance:"), gbc);
         gbc.gridy = 5;
-        inAttendanceTextArea = new JTextArea(6, 20);
+        inAttendanceTextArea = new JTextArea(5, 20);
         inAttendanceTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(inAttendanceTextArea), gbc);
 
-        //Not in Attendance
+        //Not in attendace
         gbc.gridy = 6;
-        gbc.weighty = 0.15;
+        gbc.weighty = 0.1;
         this.add(new JLabel("Not in Attendance:"), gbc);
         gbc.gridy = 7;
-        notInAttendanceTextArea = new JTextArea(6, 20);
+        notInAttendanceTextArea = new JTextArea(5, 20);
         notInAttendanceTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(notInAttendanceTextArea), gbc);
 
         //Financials
         gbc.gridy = 8;
-        gbc.weighty = 0.2;
-        this.add(new JLabel("Financials (Expenses, Revenue, Balance):"), gbc);
+        gbc.weighty = 0.1;
+        this.add(new JLabel("Financials:"), gbc);
         gbc.gridy = 9;
-        financialsTextArea = new JTextArea(4, 20);
+        financialsTextArea = new JTextArea(3, 20);
         financialsTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(financialsTextArea), gbc);
 
         //Meeting Notes
         gbc.gridy = 10;
-        gbc.weighty = 0.4;
+        gbc.weighty = 0.1;
         this.add(new JLabel("Meeting Notes:"), gbc);
         gbc.gridy = 11;
+        gbc.weighty = 1.0;
         meetingNotesTextArea = new JTextArea(10, 20);
-        meetingNotesTextArea.setText("This is what happened in our meeting");
         meetingNotesTextArea.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         this.add(new JScrollPane(meetingNotesTextArea), gbc);
     }
 
-        public void refreshData() {
-        // Populate the text areas from the parent's current data
+    public void refreshData() {
         titleTextArea.setText(parent.getTitleFieldText());
 
         String orgTimeAddress = "Organization: " + parent.getOrganizationFieldText() + "\n" +

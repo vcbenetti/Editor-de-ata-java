@@ -26,7 +26,7 @@ public class Layout {
 
         frame = new JFrame("Editor de Ata");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(550, 500);
+        frame.setSize(1600, 900);
         frame.setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
@@ -61,15 +61,17 @@ public class Layout {
         navPanel.add(attendanceButton);
         navPanel.add(editAllButton);
 
-        peopleButton.addActionListener(e -> cardLayout.show(mainPanel, "people"));
-        detailsButton.addActionListener(e -> cardLayout.show(mainPanel, "details"));
+        peopleButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "people");
+        });
+        detailsButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "details");
+        });
         attendanceButton.addActionListener(e -> {
+            updateAttendanceList();
             cardLayout.show(mainPanel, "attendance");
-            attendancePage.refreshAttendanceList();
         });
         editAllButton.addActionListener(e -> {
-            detailsPage.loadDetails();
-            attendancePage.refreshAttendanceList();
             editAllPage.refreshData();
             cardLayout.show(mainPanel, "editAll");
         });
@@ -217,6 +219,10 @@ public class Layout {
 
     public JTextArea getSavedDetailsTextArea() {
         return savedDetailsTextArea;
+    }
+
+    public void updateAttendanceList() {
+        this.attendancePage.refreshAttendanceList();
     }
 
     public String getTitleFieldText() { return detailsPage.getTitleField().getText(); }

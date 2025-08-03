@@ -117,6 +117,7 @@ public class PeoplePage extends JPanel {
                 nameField.setText("");
                 lastNameField.setText("");
                 positionComboBox.setSelectedIndex(0);
+                parent.updateAttendanceList();
                 JOptionPane.showMessageDialog(PeoplePage.this, "Entry saved successfully!",
                         "Success", JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException ex) {
@@ -150,6 +151,7 @@ public class PeoplePage extends JPanel {
                 if (parent.deleteAllNamesFromFile()) {
                     JOptionPane.showMessageDialog(frame, "All people data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
                     parent.getSavedNamesTextArea().setText("");
+                    parent.updateAttendanceList();
                 } else {
                     JOptionPane.showMessageDialog(frame, "Failed to delete all data.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -180,6 +182,7 @@ public class PeoplePage extends JPanel {
                     JOptionPane.showMessageDialog(frame, "Entry for '" + nameToDelete + "' deleted successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
                     parent.loadSavedNames();
+                    parent.updateAttendanceList();
                     nameField.setText("");
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(frame, "Error deleting from file: " + ex.getMessage(),
