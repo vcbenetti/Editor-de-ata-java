@@ -68,7 +68,8 @@ public class Layout {
             cardLayout.show(mainPanel, "details");
         });
         attendanceButton.addActionListener(e -> {
-            updateAttendanceList();
+            loadSavedNames();
+            attendancePage.refreshAttendanceList();
             cardLayout.show(mainPanel, "attendance");
         });
         editAllButton.addActionListener(e -> {

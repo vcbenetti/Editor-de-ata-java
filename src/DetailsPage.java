@@ -280,4 +280,5 @@ public class DetailsPage extends JPanel {
     public JFormattedTextField getExpensesField() { return expensesField; }
     public JFormattedTextField getRevenueField() { return revenueField; }
     public JFormattedTextField getBalanceField() { return balanceField; }
+
 }

@@ -1,6 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class EditAllPage extends JPanel {
@@ -98,10 +102,31 @@ public class EditAllPage extends JPanel {
                 "Address: " + parent.getAddressFieldText();
         organizationTimeAddressTextArea.setText(orgTimeAddress);
 
-        String financials = "Expenses: " + parent.getExpensesFieldText() + "\n" +
-                "Revenue: " + parent.getRevenueFieldText() + "\n" +
-                "Balance: " + parent.getBalanceFieldText();
-        financialsTextArea.setText(financials);
+            String expensesText = parent.getExpensesFieldText();
+            String revenueText = parent.getRevenueFieldText();
+            String balanceText = parent.getBalanceFieldText();
+
+            String cleanedExpensesText = expensesText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
+            String cleanedRevenueText = revenueText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
+            String cleanedBalanceText = balanceText.replaceAll("R\\$|\\s|\\.", "").replace(",", ".");
+
+
+            double expenses = cleanedExpensesText.isEmpty() ? 0.0 : Double.parseDouble(cleanedExpensesText);
+            double revenue = cleanedRevenueText.isEmpty() ? 0.0 : Double.parseDouble(cleanedRevenueText);
+            double balance = cleanedBalanceText.isEmpty() ? 0.0 : Double.parseDouble(cleanedBalanceText);
+
+
+            String expensesInWords = NumberToWordsConverter.convertDecimal(expenses);
+            String revenueInWords = NumberToWordsConverter.convertDecimal(revenue);
+            String balanceInWords = NumberToWordsConverter.convertDecimal(balance);
+
+
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+            String financialsText = "Expenses: " + currencyFormat.format(expenses) + " (" + expensesInWords + ")\n" +
+                    "Revenue: " + currencyFormat.format(revenue) + " (" + revenueInWords + ")\n" +
+                    "Balance: " + currencyFormat.format(balance) + " (" + balanceInWords + ")";
+            financialsTextArea.setText(financialsText);
 
         List<JCheckBox> attendanceCheckboxes = parent.getAttendanceCheckboxes();
         if (attendanceCheckboxes != null) {
@@ -128,12 +153,35 @@ public class EditAllPage extends JPanel {
             notInAttendanceTextArea.setText(absentBuilder.toString());
 
             if (!presentNames.isEmpty()) {
-                String mostImportantPerson = presentNames.get(0);
-                String closingRemarks = "lastly the " + mostImportantPerson + " thanks everyone for being here";
+                String firstPerson = presentNames.get(0);
+                String namePart = "";
+                String positionPart = "";
+
+                if (firstPerson.contains(",")) {
+                    String[] parts = firstPerson.split(",", 2);
+                    namePart = parts[0].trim();
+                    positionPart = parts[1].trim();
+                } else {
+                    namePart = firstPerson.trim();
+                }
+
+                String firstName = "";
+                String lastName = "";
+                String[] nameParts = namePart.split("\\s+");
+                if (nameParts.length > 0) {
+                    firstName = nameParts[0];
+                    if (nameParts.length > 1) {
+                        lastName = nameParts[nameParts.length - 1];
+                    }
+                }
+
+                String closingRemarks = "lastly the " + positionPart + " " + firstName + " " + lastName + " thanks everyone for being here";
                 thanksTextArea.setText(closingRemarks);
             } else {
                 thanksTextArea.setText("lastly the [most important person] thanks everyone for being here");
             }
         }
     }
+
+
 }

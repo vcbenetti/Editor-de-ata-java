@@ -1,8 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
 
 public class AttendancePage extends JPanel {
@@ -36,14 +34,21 @@ public class AttendancePage extends JPanel {
     }
 
     public void refreshAttendanceList() {
+
+        Map<String, Boolean> attendanceStates = new HashMap<>();
+        for (Component comp : attendanceListPanel.getComponents()) {
+            if (comp instanceof JCheckBox) {
+                JCheckBox cb = (JCheckBox) comp;
+                attendanceStates.put(cb.getText(), cb.isSelected());
+            }
+        }
         attendanceListPanel.removeAll();
         attendanceCheckboxes.clear();
 
         String savedNamesText = parent.getSavedNamesTextArea().getText();
-        String[] names = savedNamesText.split("\\n");
-
+        String[] namesArray = savedNamesText.split("\\n");
         List<String> sortedNames = new ArrayList<>();
-        for (String name : names) {
+        for (String name : namesArray) {
             if (!name.trim().isEmpty()) {
                 sortedNames.add(name);
             }
@@ -96,6 +101,9 @@ public class AttendancePage extends JPanel {
 
         for (String name : sortedNames) {
             JCheckBox checkBox = new JCheckBox(name);
+            if (attendanceStates.containsKey(name)) {
+                checkBox.setSelected(attendanceStates.get(name));
+            }
             attendanceCheckboxes.add(checkBox);
             attendanceListPanel.add(checkBox);
         }
