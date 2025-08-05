@@ -6,6 +6,11 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.property.TextAlignment;
+import org.languagetool.JLanguageTool;
+import org.languagetool.language.BrazilianPortuguese;
+import org.languagetool.language.English;
+import org.languagetool.language.Portuguese;
+import org.languagetool.rules.RuleMatch;
 
 import javax.swing.*;
 import java.awt.*;
@@ -116,10 +121,26 @@ public class EditAllPage extends JPanel {
         exportPdfButton = new JButton("Export to PDF");
         this.add(exportPdfButton, gbc);
 
+        //Check Grammar" button
+        gbc.gridx = 0;
+        gbc.gridy = 15;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        JButton checkGrammarButton = new JButton("Check Grammar");
+        this.add(checkGrammarButton, gbc);
+
         exportPdfButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 exportToPdf();
+            }
+        });
+
+        checkGrammarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                checkGrammar();
             }
         });
 
@@ -272,6 +293,73 @@ public class EditAllPage extends JPanel {
                         "Export Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
+        }
+    }
+
+    private void checkGrammar() {
+        // Set XML processing limits to handle LanguageTool's large XML files
+        System.setProperty("jdk.xml.entityExpansionLimit", "0");
+        System.setProperty("jdk.xml.totalEntitySizeLimit", "0");
+        System.setProperty("jdk.xml.maxGeneralEntitySizeLimit", "0");
+
+        String textToCheck = meetingNotesTextArea.getText();
+
+        if (textToCheck.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "The meeting notes are empty.", "Grammar Check", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        try {
+            // Initialize LanguageTool for both languages
+       //     JLanguageTool enTool = new JLanguageTool(new English());
+            JLanguageTool ptBrTool = new JLanguageTool(new BrazilianPortuguese());
+
+            // Check the text using both tools
+        //    List<RuleMatch> enMatches = enTool.check(textToCheck);
+            List<RuleMatch> ptBrMatches = ptBrTool.check(textToCheck);
+
+            StringBuilder feedback = new StringBuilder();
+/*
+            // Process English grammar errors
+            if (!enMatches.isEmpty()) {
+                feedback.append("English Grammar Suggestions:\n");
+                for (RuleMatch match : enMatches) {
+                    feedback.append("  - Potential error at line ").append(match.getLine()).append(", column ").append(match.getColumn()).append(": ");
+                    feedback.append(match.getMessage()).append("\n");
+                    feedback.append("    -> Suggested correction(s): ").append(match.getSuggestedReplacements()).append("\n");
+                    feedback.append("    -> Context: ").append(textToCheck.substring(match.getFromPos(), match.getToPos())).append("\n\n");
+                }
+            }
+*/
+            // Process Portuguese grammar errors
+            if (!ptBrMatches.isEmpty()) {
+                if (!feedback.isEmpty()) {
+                    feedback.append("\n");
+                }
+                feedback.append("Brazilian Portuguese Grammar Suggestions:\n");
+                for (RuleMatch match : ptBrMatches) {
+                    feedback.append("  - Potential error at line ").append(match.getLine()).append(", column ").append(match.getColumn()).append(": ");
+                    feedback.append(match.getMessage()).append("\n");
+                    feedback.append("    -> Suggested correction(s): ").append(match.getSuggestedReplacements()).append("\n");
+                    feedback.append("    -> Context: ").append(textToCheck.substring(match.getFromPos(), match.getToPos())).append("\n\n");
+                }
+            }
+
+            if (feedback.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No grammar errors found.", "Grammar Check", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JTextArea textArea = new JTextArea(feedback.toString());
+                textArea.setLineWrap(true);
+                textArea.setWrapStyleWord(true);
+                JScrollPane scrollPane = new JScrollPane(textArea);
+                scrollPane.setPreferredSize(new Dimension(500, 300));
+                JOptionPane.showMessageDialog(this, scrollPane, "Grammar Check Results", JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error during grammar check: " + ex.getMessage(),
+                    "Grammar Check Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 
