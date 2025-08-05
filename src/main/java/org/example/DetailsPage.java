@@ -1,16 +1,18 @@
-package org.example;
+package org.example; // Added package declaration
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import javax.swing.text.MaskFormatter;
 import java.text.ParseException;
 import javax.swing.text.NumberFormatter;
 import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 
 public class DetailsPage extends JPanel {
@@ -24,7 +26,9 @@ public class DetailsPage extends JPanel {
     private JFormattedTextField balanceField;
     private JTextField addressField;
 
-    private JButton saveButton;
+    private JButton saveBasicDetailsButton;
+    private JButton saveFinancialsButton;
+    private JButton saveAllButton;
     private JButton clearButton;
     private JButton deleteAllButton;
 
@@ -132,10 +136,16 @@ public class DetailsPage extends JPanel {
 
         //Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        saveButton = new JButton("Save");
+
+        saveBasicDetailsButton = new JButton("Save Basic Details");
+        saveFinancialsButton = new JButton("Save Financials");
+        saveAllButton = new JButton("Save All");
         clearButton = new JButton("Clear");
         deleteAllButton = new JButton("Delete All");
-        buttonPanel.add(saveButton);
+
+        buttonPanel.add(saveBasicDetailsButton);
+        buttonPanel.add(saveFinancialsButton);
+        buttonPanel.add(saveAllButton);
         buttonPanel.add(clearButton);
         buttonPanel.add(deleteAllButton);
 
@@ -154,64 +164,158 @@ public class DetailsPage extends JPanel {
         gbc.fill = GridBagConstraints.BOTH;
         this.add(scrollPane, gbc);
 
-
-        saveButton.addActionListener(new SaveButtonListener());
-        clearButton.addActionListener(new ClearButtonListener());
-        deleteAllButton.addActionListener(new DeleteAllButtonListener());
+        saveBasicDetailsButton.addActionListener(e -> saveBasicDetails());
+        saveFinancialsButton.addActionListener(e -> saveFinancials());
+        saveAllButton.addActionListener(e -> saveAll());
+        clearButton.addActionListener(e -> clearFields());
+        deleteAllButton.addActionListener(e -> deleteAllDetails());
 
         loadSavedDetails();
     }
 
-    private class SaveButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String title = titleField.getText().trim();
-            String organization = organizationField.getText().trim();
-            String time = timeField.getText().trim();
-            String address = addressField.getText().trim();
-            Number expenses = (Number) expensesField.getValue();
-            Number revenue = (Number) revenueField.getValue();
-            Number balance = (Number) balanceField.getValue();
+    //Helper method to get current details from the saved text area
+    private Map<String, String> getCurrentDetailsMap() {
+        Map<String, String> detailsMap = new HashMap<>();
+        String savedDetailsText = parent.getSavedDetailsTextArea().getText();
 
-            String expensesInWords = "";
-            String revenueInWords = "";
-            String balanceInWords = "";
+        detailsMap.put("Title", "");
+        detailsMap.put("Organization", "");
+        detailsMap.put("Time", "");
+        detailsMap.put("Address", "");
+        detailsMap.put("Expenses", "0.00 (zero reais)");
+        detailsMap.put("Revenue", "0.00 (zero reais)");
+        detailsMap.put("Balance", "0.00 (zero reais)");
 
-            if (expenses != null) {
-                expensesInWords = NumberToWordsConverter.convertDecimal(((Number) expenses).doubleValue());
-            }
-            if (revenue != null) {
-                revenueInWords = NumberToWordsConverter.convertDecimal(((Number) revenue).doubleValue());
-            }
-            if (balance != null) {
-                balanceInWords = NumberToWordsConverter.convertDecimal(((Number) balance).doubleValue());
-            }
+        if (savedDetailsText != null && !savedDetailsText.trim().isEmpty()) {
+            Pattern pattern = Pattern.compile("^(Title|Organization|Time|Address|Expenses|Revenue|Balance):\\s*(.*)$", Pattern.MULTILINE);
+            Matcher matcher = pattern.matcher(savedDetailsText);
+            while (matcher.find()) {
+                String key = matcher.group(1).trim();
+                String value = matcher.group(2).trim();
 
-            String entry = String.format("Title: %s\nOrganization: %s\nTime: %s\nAddress: %s\nExpenses: %.2f (%s)\nRevenue: %.2f (%s)\nBalance: %.2f (%s)",
-                    title, organization, time, address,
-                    expenses != null ? expenses.doubleValue() : 0.0, expensesInWords,
-                    revenue != null ? revenue.doubleValue() : 0.0, revenueInWords,
-                    balance != null ? balance.doubleValue() : 0.0, balanceInWords);
-
-            try {
-                parent.saveDetailsToFile(entry);
-                parent.loadSavedDetails();
-                JOptionPane.showMessageDialog(DetailsPage.this, "Details saved successfully!",
-                        "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(DetailsPage.this, "Error saving to file: " + ex.getMessage(),
-                        "File Save Error", JOptionPane.ERROR_MESSAGE);
-                ex.printStackTrace();
+                if (key.equals("Expenses") || key.equals("Revenue") || key.equals("Balance")) {
+                    Pattern financialWordsPattern = Pattern.compile("^(.*?)\\s*\\(.*\\)$");
+                    Matcher financialWordsMatcher = financialWordsPattern.matcher(value);
+                    if (financialWordsMatcher.find()) {
+                        value = financialWordsMatcher.group(1).trim();
+                    }
+                }
+                detailsMap.put(key, value);
             }
+        }
+        return detailsMap;
+    }
+
+    //Helper method to build the entry string
+    private String buildEntryString(Map<String, String> detailsMap) {
+        return String.format("Title: %s\nOrganization: %s\nTime: %s\nAddress: %s\nExpenses: %s\nRevenue: %s\nBalance: %s",
+                detailsMap.get("Title"),
+                detailsMap.get("Organization"),
+                detailsMap.get("Time"),
+                detailsMap.get("Address"),
+                detailsMap.get("Expenses"),
+                detailsMap.get("Revenue"),
+                detailsMap.get("Balance"));
+    }
+
+    //Helper method to format financial values
+    private String formatFinancialValue(JFormattedTextField field) {
+        Number value = (Number) field.getValue();
+        if (value != null) {
+            String valueInWords = NumberToWordsConverter.convertDecimal(value.doubleValue());
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+            return currencyFormat.format(value.doubleValue()) + " (" + valueInWords + ")";
+        }
+        return "0.00 (zero reais)"; // Default if field is empty or null
+    }
+
+    private void saveBasicDetails() {
+        Map<String, String> detailsToSave = getCurrentDetailsMap();
+
+        detailsToSave.put("Title", titleField.getText().trim());
+        detailsToSave.put("Organization", organizationField.getText().trim());
+        detailsToSave.put("Time", timeField.getText().trim());
+        detailsToSave.put("Address", addressField.getText().trim());
+
+
+        String entry = buildEntryString(detailsToSave);
+        try {
+            parent.saveDetailsToFile(entry);
+            parent.loadSavedDetails();
+            JOptionPane.showMessageDialog(this, "Basic details saved successfully!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error saving basic details: " + ex.getMessage(),
+                    "File Save Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 
-    private class ClearButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            clearFields();
+    private void saveFinancials() {
+        Map<String, String> detailsToSave = getCurrentDetailsMap();
+
+        Number expenses = (Number) expensesField.getValue();
+        Number revenue = (Number) revenueField.getValue();
+        Number balance = (Number) balanceField.getValue();
+
+        String expensesInWords = (expenses != null) ? NumberToWordsConverter.convertDecimal(expenses.doubleValue()) : "zero reais";
+        String revenueInWords = (revenue != null) ? NumberToWordsConverter.convertDecimal(revenue.doubleValue()) : "zero reais";
+        String balanceInWords = (balance != null) ? NumberToWordsConverter.convertDecimal(balance.doubleValue()) : "zero reais";
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+        detailsToSave.put("Expenses", currencyFormat.format(expenses != null ? expenses.doubleValue() : 0.0) + " (" + expensesInWords + ")");
+        detailsToSave.put("Revenue", currencyFormat.format(revenue != null ? revenue.doubleValue() : 0.0) + " (" + revenueInWords + ")");
+        detailsToSave.put("Balance", currencyFormat.format(balance != null ? balance.doubleValue() : 0.0) + " (" + balanceInWords + ")");
+
+        String entry = buildEntryString(detailsToSave);
+        try {
+            parent.saveDetailsToFile(entry);
+            parent.loadSavedDetails();
+            JOptionPane.showMessageDialog(this, "Financials saved successfully!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error saving financials: " + ex.getMessage(),
+                    "File Save Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
+
+    private void saveAll() {
+        Map<String, String> currentDetails = getCurrentDetailsMap();
+
+        currentDetails.put("Title", titleField.getText().trim());
+        currentDetails.put("Organization", organizationField.getText().trim());
+        currentDetails.put("Time", timeField.getText().trim());
+        currentDetails.put("Address", addressField.getText().trim());
+
+        Number expenses = (Number) expensesField.getValue();
+        Number revenue = (Number) revenueField.getValue();
+        Number balance = (Number) balanceField.getValue();
+
+        String expensesInWords = (expenses != null) ? NumberToWordsConverter.convertDecimal(expenses.doubleValue()) : "zero reais";
+        String revenueInWords = (revenue != null) ? NumberToWordsConverter.convertDecimal(revenue.doubleValue()) : "zero reais";
+        String balanceInWords = (balance != null) ? NumberToWordsConverter.convertDecimal(balance.doubleValue()) : "zero reais";
+
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+
+        currentDetails.put("Expenses", currencyFormat.format(expenses != null ? expenses.doubleValue() : 0.0) + " (" + expensesInWords + ")");
+        currentDetails.put("Revenue", currencyFormat.format(revenue != null ? revenue.doubleValue() : 0.0) + " (" + revenueInWords + ")");
+        currentDetails.put("Balance", currencyFormat.format(balance != null ? balance.doubleValue() : 0.0) + " (" + balanceInWords + ")");
+
+        String entry = buildEntryString(currentDetails);
+        try {
+            parent.saveDetailsToFile(entry);
+            parent.loadSavedDetails();
+            JOptionPane.showMessageDialog(this, "All details saved successfully!",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Error saving all details: " + ex.getMessage(),
+                    "File Save Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
 
     private void clearFields() {
         titleField.setText("");
@@ -223,64 +327,83 @@ public class DetailsPage extends JPanel {
         balanceField.setText("");
     }
 
-    private class DeleteAllButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(DetailsPage.this);
-            int response = JOptionPane.showConfirmDialog(frame,
-                    "Are you sure you want to delete ALL details data?",
-                    "Confirm Delete All",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.WARNING_MESSAGE);
+    private void deleteAllDetails() {
+        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(DetailsPage.this);
+        int response = JOptionPane.showConfirmDialog(frame,
+                "Are you sure you want to delete ALL details data? This action cannot be undone.",
+                "Confirm Delete All",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
 
-            if (response == JOptionPane.YES_OPTION) {
-                if (parent.deleteAllDetailsFromFile()) {
-                    JOptionPane.showMessageDialog(frame, "All details data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    parent.getSavedDetailsTextArea().setText("");
-                } else {
-                    JOptionPane.showMessageDialog(frame, "Failed to delete all data.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+        if (response == JOptionPane.YES_OPTION) {
+            if (parent.deleteAllDetailsFromFile()) {
+                JOptionPane.showMessageDialog(frame, "All details data has been deleted.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                parent.getSavedDetailsTextArea().setText("");
+                clearFields(); // Clear the text fields after deleting the file
+            } else {
+                JOptionPane.showMessageDialog(frame, "Failed to delete all data.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     public void loadSavedDetails() {
-        String savedDetailsText = parent.getSavedDetailsTextArea().getText();
-        if (savedDetailsText != null && !savedDetailsText.trim().isEmpty()) {
-            Pattern titlePattern = Pattern.compile("Title: (.+)");
-            Pattern organizationPattern = Pattern.compile("Organization: (.+)");
-            Pattern timePattern = Pattern.compile("Time: (.+)");
-            Pattern addressPattern = Pattern.compile("Address: (.+)");
-            Pattern expensesPattern = Pattern.compile("Expenses: (.+)");
-            Pattern revenuePattern = Pattern.compile("Revenue: (.+)");
-            Pattern balancePattern = Pattern.compile("Balance: (.+)");
+        Map<String, String> detailsMap = getCurrentDetailsMap();
 
-            Matcher titleMatcher = titlePattern.matcher(savedDetailsText);
-            Matcher organizationMatcher = organizationPattern.matcher(savedDetailsText);
-            Matcher timeMatcher = timePattern.matcher(savedDetailsText);
-            Matcher addressMatcher = addressPattern.matcher(savedDetailsText);
-            Matcher expensesMatcher = expensesPattern.matcher(savedDetailsText);
-            Matcher revenueMatcher = revenuePattern.matcher(savedDetailsText);
-            Matcher balanceMatcher = balancePattern.matcher(savedDetailsText);
+        titleField.setText(detailsMap.get("Title"));
+        organizationField.setText(detailsMap.get("Organization"));
+        timeField.setText(detailsMap.get("Time"));
+        addressField.setText(detailsMap.get("Address"));
 
-            if (titleMatcher.find()) titleField.setText(titleMatcher.group(1).trim());
-            if (organizationMatcher.find()) organizationField.setText(organizationMatcher.group(1).trim());
-            if (timeMatcher.find()) timeField.setText(timeMatcher.group(1).trim());
-            if (addressMatcher.find()) addressField.setText(addressMatcher.group(1).trim());
-            if (expensesMatcher.find()) expensesField.setText(expensesMatcher.group(1).trim());
-            if (revenueMatcher.find()) revenueField.setText(revenueMatcher.group(1).trim());
-            if (balanceMatcher.find()) balanceField.setText(balanceMatcher.group(1).trim());
-        } else {
-            clearFields();
+        try {
+            String expensesValue = detailsMap.get("Expenses");
+            if (expensesValue != null && !expensesValue.isEmpty()) {
+                String cleanedExpensesText = expensesValue.replaceAll("[R$ .]", "").replace(",", "."); // Remove R$, spaces, dots, then replace comma with dot
+                if (!cleanedExpensesText.isEmpty()) {
+                    expensesField.setValue(Double.parseDouble(cleanedExpensesText));
+                } else {
+                    expensesField.setValue(0.0);
+                }
+            } else {
+                expensesField.setValue(0.0);
+            }
+
+            String revenueValue = detailsMap.get("Revenue");
+            if (revenueValue != null && !revenueValue.isEmpty()) {
+                String cleanedRevenueText = revenueValue.replaceAll("[R$ .]", "").replace(",", ".");
+                if (!cleanedRevenueText.isEmpty()) {
+                    revenueField.setValue(Double.parseDouble(cleanedRevenueText));
+                } else {
+                    revenueField.setValue(0.0);
+                }
+            } else {
+                revenueField.setValue(0.0);
+            }
+
+            String balanceValue = detailsMap.get("Balance");
+            if (balanceValue != null && !balanceValue.isEmpty()) {
+                String cleanedBalanceText = balanceValue.replaceAll("[R$ .]", "").replace(",", ".");
+                if (!cleanedBalanceText.isEmpty()) {
+                    balanceField.setValue(Double.parseDouble(cleanedBalanceText));
+                } else {
+                    balanceField.setValue(0.0);
+                }
+            } else {
+                balanceField.setValue(0.0);
+            }
+
+        } catch (NumberFormatException ex) {
+            System.err.println("Error parsing financial data during load: " + ex.getMessage());
+            expensesField.setValue(0.0);
+            revenueField.setValue(0.0);
+            balanceField.setValue(0.0);
         }
     }
 
     public JTextField getTitleField() { return titleField; }
     public JTextField getOrganizationField() { return organizationField; }
     public JFormattedTextField getTimeField() { return timeField; }
-    public JTextField getAddressField() { return addressField; }
     public JFormattedTextField getExpensesField() { return expensesField; }
     public JFormattedTextField getRevenueField() { return revenueField; }
     public JFormattedTextField getBalanceField() { return balanceField; }
-
+    public JTextField getAddressField() { return addressField; }
 }

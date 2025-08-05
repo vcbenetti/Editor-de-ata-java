@@ -1,7 +1,7 @@
-Title: aaa
-Organization: bbb
-Time: 44:44
-Address: dwadaw
-Expenses: 123512,00 (cento e vinte e três mil, quinhentos e doze reais)
-Revenue: 51612,00 (cinquenta e um mil, seiscentos e doze reais)
-Balance: 5123231,00 (cinco milhões, cento e vinte e três mil, duzentos e trinta e um reais)
+Title: 111
+Organization: 222
+Time: 33:33
+Address: 4444
+Expenses: R$ 55.550,00 (cinquenta e cinco mil, quinhentos e cinquenta reais)
+Revenue: R$ 66.660,00 (sessenta e seis mil, seiscentos e sessenta reais)
+Balance: R$ 77.770,00 (setenta e sete mil, setecentos e setenta reais)
