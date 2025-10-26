@@ -2,6 +2,8 @@
 
 ![GitHub language](https://img.shields.io/github/languages/top/vcbenetti/Editor-de-ata-java)
 ![GitHub stars](https://img.shields.io/github/stars/vcbenetti/Editor-de-ata-java?style=social)
+[![NPM](https://img.shields.io/npm/l/react)](https://github.com/vcbenetti/Editor-de-ata-java/blob/main/LICENSE) 
+
 
 ## 📄 Descrição do Projeto
 
@@ -24,3 +26,9 @@ O projeto foi desenvolvido majoritariamente com:
 * **Linguagem:** Java
 * **Gerenciador de Dependências:** Apache Maven
 * **Armazenamento de Dados:** Arquivos de texto (`.txt`) para persistência de detalhes e nomes.
+
+# Autor
+
+Victor Benetti
+
+https://www.linkedin.com/in/vcbenetti
